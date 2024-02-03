@@ -1,0 +1,4 @@
+input_devices = sd.query_devices()
+
+for i, device in enumerate(input_devices):
+    print(f"Index: {i}, Name: {device}")
