@@ -1,6 +1,8 @@
 import sounddevice as sd
 import scipy.io.wavfile as wav
 import stt_api
+import ai
+import tts
 import numpy as np
 import speech_recognition as sr
 import pyaudio as pd
@@ -43,6 +45,7 @@ def transcribe_audio(recognizer, audio):
 if __name__ == "__main__":
     recognizer = sr.Recognizer()
     microphone = sr.Microphone()
+    noise_detected = False
 
     while True:
         # Record audio when noise is detected
@@ -52,23 +55,16 @@ if __name__ == "__main__":
         rms_energy = calculate_rms(audio)
         if rms_energy > NOISE_THRESHOLD:
             print("Noise detected!")
+            noise_detected = True
 
-            # Wait for audio to become silent
-            start_time = time.time()
-            while rms_energy > SILENCE_THRESHOLD:
-                audio = record_audio(recognizer, microphone)
-                rms_energy = calculate_rms(audio)
-
-                # Stop waiting if maximum silence threshold is reached
-                if time.time() - start_time > SILENCE_THRESHOLD:
-                    break
-
-            # Transcribe the recorded audio when it becomes silent
+        # Transcribe the recorded audio when noise is detected
+        if noise_detected:
             transcription = transcribe_audio(recognizer, audio)
             if transcription:
                 print("Transcription: {}".format(transcription))
-            else:
-                print("No speech detected.")
+                ai_response = ai.chatbot(transcription)
+                tts.text_to_speech(ai_response)
+                noise_detected = False  # Reset the flag
 
         # Continue recording audio again
         print("Listening for noise...")
